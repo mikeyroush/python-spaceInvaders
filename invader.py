@@ -1,5 +1,59 @@
 import pygame
 import os
+from random import uniform
+
+
+class Player(pygame.sprite.Sprite):
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.image.load(os.path.join(imagePath, 'player.png'))
+        self.image = pygame.transform.rotozoom(self.image, 44, 0.25)
+        self.size = self.image.get_rect().size
+        self.x = 400 - self.size[0]/2
+        self.y = 600 - self.size[1]
+        self.dx = 0
+
+    def checkBounds(self):
+        if self.x < 0:
+            self.x = 0
+        elif self.x > 800 - self.size[0]:
+            self.x = 800 - self.size[0]
+
+    def move(self, key):
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_LEFT:
+                self.dx -= 10
+            if event.key == pygame.K_RIGHT:
+                self.dx += 10
+        if event.type == pygame.KEYUP:
+            self.dx = 0
+
+    def update(self):
+        self.x += self.dx
+        self.checkBounds()
+        screen.blit(self.image, (self.x, self.y))
+
+
+class Enemy(pygame.sprite.Sprite):
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.image.load(os.path.join(imagePath, 'ufo.png'))
+        self.image = pygame.transform.rotozoom(self.image, 0, 0.25)
+        self.size = self.image.get_rect().size
+        self.x = 400 - self.size[0]/2
+        self.y = 10
+        self.dx = 3
+
+    def checkBounds(self):
+        if self.x < 0 or self.x > 800 - self.size[0]:
+            self.dx *= -1
+            self.y += 10
+
+    def update(self):
+        self.x += self.dx
+        self.checkBounds()
+        screen.blit(self.image, (self.x, self.y))
+
 
 # initialize paths
 currentPath = os.path.dirname(__file__)
@@ -18,18 +72,9 @@ pygame.display.set_caption("Space Invaders")
 icon = pygame.image.load(os.path.join(imagePath, 'icon.png'))
 pygame.display.set_icon(icon)
 
-# Player
-playerImg = pygame.image.load(os.path.join(imagePath, 'player.png'))
-playerImg = pygame.transform.rotozoom(playerImg, 44, 0.25)
-playerSize = playerImg.get_rect().size
-playerX = 400 - playerSize[0]/2
-playerY = 600 - playerSize[1]
-playerX_change = 0
-
-
-def player(x, y):
-    screen.blit(playerImg, (x, y))
-
+# initialize player and enemies
+player = Player()
+enemy = Enemy()
 
 # Game Loop
 running = True
@@ -38,18 +83,12 @@ while running:
         # check if the game has been quit
         if event.type == pygame.QUIT:
             running = False
-        # check for key press
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_LEFT:
-                playerX_change -= 10
-            if event.key == pygame.K_RIGHT:
-                playerX_change += 10
-        if event.type == pygame.KEYUP:
-            playerX_change = 0
+        # move player
+        player.move(event)
 
     # update screen with changes
     screen.fill(bgColor)
-    playerX += playerX_change
-    player(playerX, playerY)
+    player.update()
+    enemy.update()
     pygame.display.update()
 pygame.quit()
